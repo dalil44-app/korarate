@@ -11,103 +11,79 @@
       font-family: Arial, sans-serif;
       background: #0f172a;
       color: white;
+      text-align: center;
     }
 
     header {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px 20px;
+      padding: 15px;
       background: #020617;
       border-bottom: 1px solid #1e293b;
-    }
-
-    .logo {
       font-size: 20px;
-      font-weight: bold;
-    }
-
-    .btn {
-      background: #22c55e;
-      padding: 8px 15px;
-      border-radius: 8px;
-      color: black;
-      text-decoration: none;
       font-weight: bold;
     }
 
     .container {
-      padding: 20px;
+      padding: 30px;
     }
 
-    .card {
-      background: #020617;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
+    .stars {
+      font-size: 40px;
+      cursor: pointer;
     }
 
-    .match {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .stars span {
+      color: gray;
+      transition: 0.2s;
     }
 
-    .teams {
-      font-size: 18px;
-    }
-
-    .rating {
+    .stars span.active {
       color: gold;
-      font-size: 20px;
     }
 
-    .title {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #94a3b8;
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #22c55e;
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">⚽ KoraRate</div>
-    <a href="#" class="btn">تسجيل</a>
-  </header>
+  <header>⚽ KoraRate</header>
 
   <div class="container">
+    <h2>قيّم المباراة</h2>
 
-    <div class="card">
-      <div class="title">🔥 أفضل مباراة اليوم</div>
-
-      <div class="match">
-        <div class="teams">برشلونة vs ريال مدريد</div>
-        <div class="rating">⭐ 8.5</div>
-      </div>
-
-      <p>مباراة قوية ومليئة بالإثارة! تقييم الجمهور مرتفع 🔥</p>
+    <div class="stars" id="stars">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
     </div>
 
-    <div class="card">
-      <div class="title">⚽ قيّم المباراة</div>
-      <p>كيف كانت المباراة؟</p>
-
-      <div class="rating">
-        ⭐ ⭐ ⭐ ⭐ ⭐
-      </div>
-    </div>
-
+    <div class="result" id="result"></div>
   </div>
 
-  <footer>
-    © 2026 KoraRate
-  </footer>
+  <script>
+    const stars = document.querySelectorAll("#stars span");
+    const result = document.getElementById("result");
+
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        let value = star.getAttribute("data-value");
+
+        stars.forEach(s => s.classList.remove("active"));
+
+        for (let i = 0; i < value; i++) {
+          stars[i].classList.add("active");
+        }
+
+        result.textContent = "تقييمك: " + value + " ⭐";
+      });
+    });
+  </script>
 
 </body>
 </html>
