@@ -1,158 +1,194 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>KoraRate</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>KoraRate</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+}
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px 20px;
-      background: #020617;
-      border-bottom: 1px solid #1e293b;
-    }
+header {
+  padding: 15px;
+  text-align: center;
+  background: #020617;
+  font-size: 22px;
+  font-weight: bold;
+  border-bottom: 1px solid #1e293b;
+}
 
-    .logo {
-      font-size: 20px;
-      font-weight: bold;
-    }
+.container {
+  padding: 20px;
+}
 
-    .container {
-      padding: 20px;
-    }
+.card {
+  background: #020617;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
 
-    .card {
-      background: #020617;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
+.title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
 
-    .title {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
+.stars span {
+  font-size: 30px;
+  cursor: pointer;
+  color: gray;
+  transition: 0.2s;
+}
 
-    .match {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+.stars span.active {
+  color: gold;
+}
 
-    .teams {
-      font-size: 18px;
-    }
+.result {
+  margin-top: 8px;
+  color: #22c55e;
+}
 
-    .rating-display {
-      color: gold;
-      font-size: 18px;
-    }
+textarea {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 8px;
+  padding: 10px;
+  border: none;
+}
 
-    .stars span {
-      font-size: 35px;
-      cursor: pointer;
-      color: gray;
-      transition: 0.2s;
-    }
+button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #22c55e;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-    .stars span.active {
-      color: gold;
-    }
-
-    .result {
-      margin-top: 10px;
-      color: #22c55e;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #94a3b8;
-    }
-  </style>
+.comment {
+  background: #1e293b;
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 6px;
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">⚽ KoraRate</div>
-  </header>
+<header>⚽ KoraRate</header>
 
-  <div class="container">
+<div class="container" id="matches"></div>
 
-    <div class="card">
-      <div class="title">🔥 أفضل مباراة اليوم</div>
+<script>
 
-      <div class="match">
-        <div class="teams">برشلونة vs ريال مدريد</div>
-        <div class="rating-display">⭐ 8.5</div>
-      </div>
+// ⚽ قائمة المباريات
+const matches = [
+  { id: 1, name: "برشلونة vs ريال مدريد" },
+  { id: 2, name: "بايرن ميونخ vs دورتموند" },
+  { id: 3, name: "مانشستر سيتي vs ليفربول" }
+];
 
-      <p>مباراة قوية ومليئة بالإثارة!</p>
+const container = document.getElementById("matches");
+
+// إنشاء الواجهة
+matches.forEach(match => {
+  let div = document.createElement("div");
+  div.className = "card";
+
+  div.innerHTML = `
+    <div class="title">${match.name}</div>
+
+    <div class="stars" id="stars-${match.id}">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
     </div>
 
-    <div class="card">
-      <div class="title">⭐ قيّم المباراة</div>
+    <div class="result" id="result-${match.id}"></div>
 
-      <div class="stars" id="stars">
-        <span data-value="1">★</span>
-        <span data-value="2">★</span>
-        <span data-value="3">★</span>
-        <span data-value="4">★</span>
-        <span data-value="5">★</span>
-      </div>
+    <textarea id="input-${match.id}" placeholder="اكتب رأيك عن المباراة..."></textarea>
+    <button onclick="addComment(${match.id})">إرسال</button>
 
-      <div class="result" id="result"></div>
-    </div>
+    <div id="comments-${match.id}"></div>
+  `;
 
-  </div>
+  container.appendChild(div);
 
-  <footer>
-    © 2026 KoraRate
-  </footer>
+  setupRating(match.id);
+  loadComments(match.id);
+});
 
-  <script>
-    const stars = document.querySelectorAll("#stars span");
-    const result = document.getElementById("result");
+// ⭐ التقييم
+function setupRating(id) {
+  const stars = document.querySelectorAll(`#stars-${id} span`);
+  const result = document.getElementById(`result-${id}`);
 
-    // تحميل التقييم من التخزين
-    let savedRating = localStorage.getItem("rating");
+  let saved = localStorage.getItem("rating-" + id);
 
-    if (savedRating) {
-      for (let i = 0; i < savedRating; i++) {
+  if (saved) {
+    for (let i = 0; i < saved; i++) {
+      stars[i].classList.add("active");
+    }
+    result.textContent = "تقييمك: " + saved + " ⭐";
+  }
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      let value = star.getAttribute("data-value");
+
+      stars.forEach(s => s.classList.remove("active"));
+
+      for (let i = 0; i < value; i++) {
         stars[i].classList.add("active");
       }
-      result.textContent = "تقييمك: " + savedRating + " ⭐";
-    }
 
-    // عند الضغط
-    stars.forEach(star => {
-      star.addEventListener("click", () => {
-        let value = star.getAttribute("data-value");
-
-        stars.forEach(s => s.classList.remove("active"));
-
-        for (let i = 0; i < value; i++) {
-          stars[i].classList.add("active");
-        }
-
-        // حفظ التقييم
-        localStorage.setItem("rating", value);
-
-        result.textContent = "تقييمك: " + value + " ⭐";
-      });
+      localStorage.setItem("rating-" + id, value);
+      result.textContent = "تقييمك: " + value + " ⭐";
     });
-  </script>
+  });
+}
+
+// 💬 تحميل التعليقات
+function loadComments(id) {
+  let comments = JSON.parse(localStorage.getItem("comments-" + id)) || [];
+  let box = document.getElementById("comments-" + id);
+  box.innerHTML = "";
+
+  comments.forEach(c => {
+    let div = document.createElement("div");
+    div.className = "comment";
+    div.textContent = c;
+    box.appendChild(div);
+  });
+}
+
+// 💬 إضافة تعليق
+function addComment(id) {
+  let input = document.getElementById("input-" + id);
+  let text = input.value.trim();
+
+  if (!text) return;
+
+  let comments = JSON.parse(localStorage.getItem("comments-" + id)) || [];
+  comments.push(text);
+
+  localStorage.setItem("comments-" + id, JSON.stringify(comments));
+
+  input.value = "";
+  loadComments(id);
+}
+
+</script>
 
 </body>
 </html>
