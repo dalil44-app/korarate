@@ -3,11 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <title>KoraRate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: #020617;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .btn {
+      background: #22c55e;
+      padding: 8px 15px;
+      border-radius: 8px;
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: #020617;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .match {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .teams {
+      font-size: 18px;
+    }
+
+    .rating {
+      color: gold;
+      font-size: 20px;
+    }
+
+    .title {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+    }
+  </style>
 </head>
-<body style="text-align:center; font-family:Arial; margin-top:100px; background:#0f172a; color:white;">
-  
-  <h1>⚽ KoraRate</h1>
-  <p>قيّم المباريات وشارك رأيك في كرة القدم</p>
+
+<body>
+
+  <header>
+    <div class="logo">⚽ KoraRate</div>
+    <a href="#" class="btn">تسجيل</a>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <div class="title">🔥 أفضل مباراة اليوم</div>
+
+      <div class="match">
+        <div class="teams">برشلونة vs ريال مدريد</div>
+        <div class="rating">⭐ 8.5</div>
+      </div>
+
+      <p>مباراة قوية ومليئة بالإثارة! تقييم الجمهور مرتفع 🔥</p>
+    </div>
+
+    <div class="card">
+      <div class="title">⚽ قيّم المباراة</div>
+      <p>كيف كانت المباراة؟</p>
+
+      <div class="rating">
+        ⭐ ⭐ ⭐ ⭐ ⭐
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2026 KoraRate
+  </footer>
 
 </body>
 </html>
