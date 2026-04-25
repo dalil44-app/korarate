@@ -1,175 +1,162 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>KoraRate</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+import { useState, useMemo } from "react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; import { Star, User, Trophy, ArrowLeft } from "lucide-react"; import { motion } from "framer-motion";
 
-<style>
-body {margin:0;font-family:Arial;background:#0f172a;color:white;}
-header {padding:15px;text-align:center;background:#020617;font-size:22px;}
-.container {padding:20px;}
-.card {background:#020617;padding:20px;border-radius:12px;margin-bottom:20px;}
-.stars span {font-size:30px;cursor:pointer;color:gray;}
-.stars span:hover,
-.stars span.active {color:gold;}
-.comment {background:#1e293b;padding:8px;margin-top:8px;border-radius:6px;}
-textarea {width:100%;margin-top:10px;padding:10px;border-radius:8px;}
-button {margin-top:10px;padding:8px;background:#22c55e;border:none;border-radius:6px;cursor:pointer;}
-.avg {color:#38bdf8;margin-top:5px;}
-.login-box {text-align:center; margin:15px;}
-</style>
-</head>
+const matchesData = [ { id: 1, name: "برشلونة vs ريال مدريد", teams: ["برشلونة", "ريال مدريد"] }, { id: 2, name: "مانشستر سيتي vs ليفربول", teams: ["مانشستر سيتي", "ليفربول"] }, { id: 3, name: "بايرن ميونخ vs دورتموند", teams: ["بايرن ميونخ", "دورتموند"] } ];
 
-<body>
+const teamsData = [ { name: "برشلونة", wins: 18, losses: 5, draws: 3, goals: 55 }, { name: "ريال مدريد", wins: 20, losses: 4, draws: 2, goals: 60 }, { name: "مانشستر سيتي", wins: 22, losses: 3, draws: 1, goals: 70 }, { name: "ليفربول", wins: 19, losses: 6, draws: 2, goals: 58 } ];
 
-<header>⚽ KoraRate</header>
+export default function KoraRatePro() { const [user, setUser] = useState({ name: "زائر", loggedIn: false }); const [ratings, setRatings] = useState({}); const [userRatings, setUserRatings] = useState({}); const [comments, setComments] = useState({}); const [input, setInput] = useState({}); const [selectedTeam, setSelectedTeam] = useState(null);
 
-<div class="login-box">
-  <button onclick="login()">تسجيل الدخول عبر Google</button>
+const login = () => { setUser({ name: "مستخدم جوجل", loggedIn: true }); };
+
+const handleRate = (matchId, value) => { if (userRatings[matchId]) return; setRatings((prev) => ({ ...prev, [matchId]: value })); setUserRatings((prev) => ({ ...prev, [matchId]: true })); };
+
+const addComment = (matchId) => { if (!input[matchId]) return; setComments((prev) => ({ ...prev, [matchId]: [ ...(prev[matchId] || []), { text: input[matchId], user: user.name } ] })); setInput((prev) => ({ ...prev, [matchId]: "" })); };
+
+const getTeamStats = (teamName) => { return teamsData.find((t) => t.name === teamName); };
+
+return ( <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white p-4"> <header className="flex justify-between items-center py-4"> <h1 className="text-2xl font-bold">⚽ KoraRate Pro</h1>
+
+<div className="flex items-center gap-2">
+      <User size={18} />
+      <span>{user.name}</span>
+      {!user.loggedIn && (
+        <Button onClick={login} size="sm">دخول</Button>
+      )}
+    </div>
+  </header>
+
+  {/* TEAM PAGE */}
+  {selectedTeam ? (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Button
+        onClick={() => setSelectedTeam(null)}
+        className="mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft size={16} /> رجوع
+      </Button>
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardContent className="p-4">
+          <h2 className="text-2xl font-bold mb-4">🏟️ {selectedTeam}</h2>
+
+          {(() => {
+            const stats = getTeamStats(selectedTeam);
+            if (!stats) return <p>لا توجد بيانات</p>;
+
+            return (
+              <div className="space-y-2">
+                <p>🏆 الانتصارات: {stats.wins}</p>
+                <p>❌ الهزائم: {stats.losses}</p>
+                <p>➖ التعادلات: {stats.draws}</p>
+                <p>⚽ الأهداف: {stats.goals}</p>
+              </div>
+            );
+          })()}
+        </CardContent>
+      </Card>
+    </motion.div>
+  ) : (
+    <Tabs defaultValue="matches" className="w-full max-w-3xl mx-auto">
+      <TabsList className="grid grid-cols-3">
+        <TabsTrigger value="matches">المباريات</TabsTrigger>
+        <TabsTrigger value="teams">الفرق</TabsTrigger>
+        <TabsTrigger value="rank">الترتيب</TabsTrigger>
+      </TabsList>
+
+      {/* MATCHES */}
+      <TabsContent value="matches">
+        <div className="space-y-4 mt-4">
+          {matchesData.map((match) => (
+            <Card key={match.id} className="bg-slate-800 border-slate-700">
+              <CardContent className="p-4">
+                <h2 className="text-lg font-semibold mb-3">
+                  {match.name}
+                </h2>
+
+                <div className="flex gap-2 mb-3">
+                  {match.teams.map((t) => (
+                    <Button
+                      key={t}
+                      size="sm"
+                      onClick={() => setSelectedTeam(t)}
+                    >
+                      {t}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      onClick={() => handleRate(match.id, star)}
+                      className={`cursor-pointer ${
+                        ratings[match.id] >= star
+                          ? "text-yellow-400"
+                          : "text-gray-500"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <p className="text-sm text-sky-300 mb-3">
+                  التقييم: {ratings[match.id] || 0} / 5
+                </p>
+
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="تعليق..."
+                    value={input[match.id] || ""}
+                    onChange={(e) =>
+                      setInput({ ...input, [match.id]: e.target.value })
+                    }
+                  />
+                  <Button onClick={() => addComment(match.id)}>
+                    إرسال
+                  </Button>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  {(comments[match.id] || []).map((c, i) => (
+                    <div key={i} className="bg-slate-900 p-2 rounded">
+                      <b className="text-sky-300">{c.user}</b>: {c.text}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </TabsContent>
+
+      {/* TEAMS */}
+      <TabsContent value="teams">
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          {teamsData.map((team) => (
+            <Card
+              key={team.name}
+              className="bg-slate-800 border-slate-700 cursor-pointer"
+              onClick={() => setSelectedTeam(team.name)}
+            >
+              <CardContent className="p-4">
+                <h3 className="font-bold">🏟️ {team.name}</h3>
+                <p className="text-sm text-sky-300">
+                  ⚽ {team.goals} أهداف
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </TabsContent>
+
+      {/* RANKING */}
+      <TabsContent value="rank">
+        <div className="text-center text-slate-400 mt-10">
+          ترتيب قيد التطوير...
+        </div>
+      </TabsContent>
+    </Tabs>
+  )}
 </div>
 
-<div class="container" id="matches"></div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider } 
-from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs } 
-from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDQHLKfABXjHlTHPnERDpdXtLa4yLbRVMs",
-  authDomain: "korarate-71184.firebaseapp.com",
-  projectId: "korarate-71184",
-  storageBucket: "korarate-71184.firebasestorage.app",
-  messagingSenderId: "924317175958",
-  appId: "1:924317175958:web:1e4a53d2e1e9a7f33b32b7"
-};
-
-// Firebase init
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-// تسجيل الدخول
-window.login = async function () {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    alert("مرحبا " + result.user.displayName);
-  } catch (e) {
-    alert("خطأ فالتسجيل");
-    console.log(e);
-  }
-};
-
-// ⚽ مباريات
-const matches = [
-  { id: 1, name: "برشلونة vs ريال مدريد" },
-  { id: 2, name: "بايرن ميونخ vs دورتموند" },
-  { id: 3, name: "مانشستر سيتي vs ليفربول" }
-];
-
-const container = document.getElementById("matches");
-
-matches.forEach(match => {
-  const div = document.createElement("div");
-  div.className = "card";
-
-  div.innerHTML = `
-    <h3>${match.name}</h3>
-
-    <div class="stars" id="stars-${match.id}">
-      <span data="1">★</span>
-      <span data="2">★</span>
-      <span data="3">★</span>
-      <span data="4">★</span>
-      <span data="5">★</span>
-    </div>
-
-    <div class="avg" id="avg-${match.id}">تحميل...</div>
-
-    <textarea id="input-${match.id}" placeholder="اكتب تعليقك"></textarea>
-    <button onclick="addComment(${match.id})">إرسال</button>
-
-    <div id="comments-${match.id}"></div>
-  `;
-
-  container.appendChild(div);
-
-  loadComments(match.id);
-  loadRatings(match.id);
-
-  document.querySelectorAll(`#stars-${match.id} span`).forEach(star => {
-    star.onclick = async () => {
-      const value = Number(star.getAttribute("data"));
-
-      await addDoc(collection(db, "ratings"), {
-        matchId: match.id,
-        value: value
-      });
-
-      loadRatings(match.id);
-    };
-  });
-});
-
-// 💬 إضافة تعليق
-window.addComment = async function(id){
-  const input = document.getElementById("input-"+id);
-  const text = input.value.trim();
-  if(!text) return;
-
-  await addDoc(collection(db,"comments"),{
-    matchId:id,
-    text:text
-  });
-
-  input.value="";
-  loadComments(id);
-};
-
-// تحميل التعليقات
-async function loadComments(id){
-  const box=document.getElementById("comments-"+id);
-  box.innerHTML="";
-
-  const snap = await getDocs(collection(db,"comments"));
-
-  snap.forEach(doc=>{
-    const d=doc.data();
-    if(d.matchId==id){
-      const div=document.createElement("div");
-      div.className="comment";
-      div.textContent=d.text;
-      box.appendChild(div);
-    }
-  });
-}
-
-// ⭐ حساب التقييم
-async function loadRatings(id){
-  const snap = await getDocs(collection(db,"ratings"));
-  let arr=[];
-
-  snap.forEach(doc=>{
-    const d=doc.data();
-    if(d.matchId==id){
-      arr.push(d.value);
-    }
-  });
-
-  let avg=0;
-  if(arr.length){
-    avg=(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
-  }
-
-  document.getElementById("avg-"+id).textContent =
-    "⭐ "+avg+" / 5 ("+arr.length+" تقييم)";
-}
-
-</script>
-
-</body>
-</html>
+); }
