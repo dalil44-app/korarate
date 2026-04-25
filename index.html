@@ -11,32 +11,30 @@ header {padding:15px;text-align:center;background:#020617;font-size:22px;}
 .container {padding:20px;}
 .card {background:#020617;padding:20px;border-radius:12px;margin-bottom:20px;}
 .stars span {font-size:30px;cursor:pointer;color:gray;}
+.stars span:hover,
 .stars span.active {color:gold;}
 .comment {background:#1e293b;padding:8px;margin-top:8px;border-radius:6px;}
 textarea {width:100%;margin-top:10px;padding:10px;border-radius:8px;}
-button {margin-top:10px;padding:8px;background:#22c55e;border:none;border-radius:6px;}
+button {margin-top:10px;padding:8px;background:#22c55e;border:none;border-radius:6px;cursor:pointer;}
 .avg {color:#38bdf8;margin-top:5px;}
+.login-box {text-align:center; margin:15px;}
 </style>
 </head>
 
 <body>
 
 <header>⚽ KoraRate</header>
+
+<div class="login-box">
+  <button onclick="login()">تسجيل الدخول عبر Google</button>
+</div>
+
 <div class="container" id="matches"></div>
 
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-  const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-window.login = async function() {
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-
-  alert("مرحبا " + user.displayName);
-};
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
@@ -49,11 +47,23 @@ const firebaseConfig = {
   appId: "1:924317175958:web:1e4a53d2e1e9a7f33b32b7"
 };
 
+// Firebase init
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
-<div style="text-align:center; margin:20px;">
-  <button onclick="login()">تسجيل الدخول عبر Google</button>
-</div>
+const provider = new GoogleAuthProvider();
+
+// تسجيل الدخول
+window.login = async function () {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    alert("مرحبا " + result.user.displayName);
+  } catch (e) {
+    alert("خطأ فالتسجيل");
+    console.log(e);
+  }
+};
+
 // ⚽ مباريات
 const matches = [
   { id: 1, name: "برشلونة vs ريال مدريد" },
@@ -64,7 +74,7 @@ const matches = [
 const container = document.getElementById("matches");
 
 matches.forEach(match => {
-  let div = document.createElement("div");
+  const div = document.createElement("div");
   div.className = "card";
 
   div.innerHTML = `
@@ -91,24 +101,24 @@ matches.forEach(match => {
   loadComments(match.id);
   loadRatings(match.id);
 
-  document.querySelectorAll(`#stars-${match.id} span`).forEach(star=>{
-    star.onclick = async ()=>{
-      let value = Number(star.getAttribute("data"));
+  document.querySelectorAll(`#stars-${match.id} span`).forEach(star => {
+    star.onclick = async () => {
+      const value = Number(star.getAttribute("data"));
 
-      await addDoc(collection(db,"ratings"),{
+      await addDoc(collection(db, "ratings"), {
         matchId: match.id,
-        value:value
+        value: value
       });
 
       loadRatings(match.id);
-    }
+    };
   });
 });
 
-// 💬 تعليقات
+// 💬 إضافة تعليق
 window.addComment = async function(id){
-  let input = document.getElementById("input-"+id);
-  let text = input.value.trim();
+  const input = document.getElementById("input-"+id);
+  const text = input.value.trim();
   if(!text) return;
 
   await addDoc(collection(db,"comments"),{
@@ -118,17 +128,19 @@ window.addComment = async function(id){
 
   input.value="";
   loadComments(id);
-}
+};
 
+// تحميل التعليقات
 async function loadComments(id){
-  let box=document.getElementById("comments-"+id);
+  const box=document.getElementById("comments-"+id);
   box.innerHTML="";
 
-  let snap = await getDocs(collection(db,"comments"));
+  const snap = await getDocs(collection(db,"comments"));
+
   snap.forEach(doc=>{
-    let d=doc.data();
+    const d=doc.data();
     if(d.matchId==id){
-      let div=document.createElement("div");
+      const div=document.createElement("div");
       div.className="comment";
       div.textContent=d.text;
       box.appendChild(div);
@@ -136,13 +148,13 @@ async function loadComments(id){
   });
 }
 
-// ⭐ تقييم
+// ⭐ حساب التقييم
 async function loadRatings(id){
-  let snap = await getDocs(collection(db,"ratings"));
+  const snap = await getDocs(collection(db,"ratings"));
   let arr=[];
 
   snap.forEach(doc=>{
-    let d=doc.data();
+    const d=doc.data();
     if(d.matchId==id){
       arr.push(d.value);
     }
