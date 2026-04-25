@@ -25,7 +25,17 @@ button {margin-top:10px;padding:8px;background:#22c55e;border:none;border-radius
 <div class="container" id="matches"></div>
 
 <script type="module">
+import { getAuth, signInWithPopup, GoogleAuthProvider } 
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+  const auth = getAuth();
+const provider = new GoogleAuthProvider();
 
+window.login = async function() {
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+
+  alert("مرحبا " + user.displayName);
+};
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } 
 from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -41,7 +51,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+<div style="text-align:center; margin:20px;">
+  <button onclick="login()">تسجيل الدخول عبر Google</button>
+</div>
 // ⚽ مباريات
 const matches = [
   { id: 1, name: "برشلونة vs ريال مدريد" },
