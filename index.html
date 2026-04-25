@@ -6,92 +6,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0f172a;
-  color: white;
-}
-
-header {
-  padding: 15px;
-  text-align: center;
-  background: #020617;
-  font-size: 22px;
-  font-weight: bold;
-}
-
-.container {
-  padding: 20px;
-}
-
-.card {
-  background: #020617;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-.title {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.stars span {
-  font-size: 30px;
-  cursor: pointer;
-  color: gray;
-}
-
-.stars span.active {
-  color: gold;
-}
-
-.result {
-  margin-top: 8px;
-  color: #22c55e;
-}
-
-.avg {
-  margin-top: 5px;
-  color: #38bdf8;
-}
-
-textarea {
-  width: 100%;
-  margin-top: 10px;
-  border-radius: 8px;
-  padding: 10px;
-  border: none;
-}
-
-button {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: #22c55e;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.comment {
-  background: #1e293b;
-  padding: 8px;
-  margin-top: 8px;
-  border-radius: 6px;
-}
+body {margin:0;font-family:Arial;background:#0f172a;color:white;}
+header {padding:15px;text-align:center;background:#020617;font-size:22px;}
+.container {padding:20px;}
+.card {background:#020617;padding:20px;border-radius:12px;margin-bottom:20px;}
+.stars span {font-size:30px;cursor:pointer;color:gray;}
+.stars span.active {color:gold;}
+.comment {background:#1e293b;padding:8px;margin-top:8px;border-radius:6px;}
+textarea {width:100%;margin-top:10px;padding:10px;border-radius:8px;}
+button {margin-top:10px;padding:8px;background:#22c55e;border:none;border-radius:6px;}
+.avg {color:#38bdf8;margin-top:5px;}
 </style>
 </head>
 
 <body>
 
 <header>⚽ KoraRate</header>
-
 <div class="container" id="matches"></div>
 
-<script>
+<script type="module">
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } 
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDQHLKfABXjHlTHPnERDpdXtLa4yLbRVMs",
+  authDomain: "korarate-71184.firebaseapp.com",
+  projectId: "korarate-71184",
+  storageBucket: "korarate-71184.firebasestorage.app",
+  messagingSenderId: "924317175958",
+  appId: "1:924317175958:web:1e4a53d2e1e9a7f33b32b7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ⚽ مباريات
 const matches = [
   { id: 1, name: "برشلونة vs ريال مدريد" },
   { id: 2, name: "بايرن ميونخ vs دورتموند" },
@@ -100,26 +51,24 @@ const matches = [
 
 const container = document.getElementById("matches");
 
-// إنشاء المباريات
 matches.forEach(match => {
   let div = document.createElement("div");
   div.className = "card";
 
   div.innerHTML = `
-    <div class="title">${match.name}</div>
+    <h3>${match.name}</h3>
 
     <div class="stars" id="stars-${match.id}">
-      <span data-value="1">★</span>
-      <span data-value="2">★</span>
-      <span data-value="3">★</span>
-      <span data-value="4">★</span>
-      <span data-value="5">★</span>
+      <span data="1">★</span>
+      <span data="2">★</span>
+      <span data="3">★</span>
+      <span data="4">★</span>
+      <span data="5">★</span>
     </div>
 
-    <div class="result" id="result-${match.id}"></div>
-    <div class="avg" id="avg-${match.id}"></div>
+    <div class="avg" id="avg-${match.id}">تحميل...</div>
 
-    <textarea id="input-${match.id}" placeholder="اكتب تعليقك..."></textarea>
+    <textarea id="input-${match.id}" placeholder="اكتب تعليقك"></textarea>
     <button onclick="addComment(${match.id})">إرسال</button>
 
     <div id="comments-${match.id}"></div>
@@ -127,93 +76,73 @@ matches.forEach(match => {
 
   container.appendChild(div);
 
-  setupRating(match.id);
   loadComments(match.id);
-  updateAverage(match.id);
+  loadRatings(match.id);
+
+  document.querySelectorAll(`#stars-${match.id} span`).forEach(star=>{
+    star.onclick = async ()=>{
+      let value = Number(star.getAttribute("data"));
+
+      await addDoc(collection(db,"ratings"),{
+        matchId: match.id,
+        value:value
+      });
+
+      loadRatings(match.id);
+    }
+  });
 });
 
-// ⭐ التقييم
-function setupRating(id) {
-  const stars = document.querySelectorAll(`#stars-${id} span`);
-  const result = document.getElementById(`result-${id}`);
-
-  let saved = localStorage.getItem("rating-" + id);
-
-  if (saved) {
-    highlightStars(stars, saved);
-    result.textContent = "تقييمك: " + saved + " ⭐";
-  }
-
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      let value = Number(star.getAttribute("data-value"));
-
-      localStorage.setItem("rating-" + id, value);
-
-      highlightStars(stars, value);
-      result.textContent = "تقييمك: " + value + " ⭐";
-
-      updateAverage(id);
-    });
-  });
-}
-
-// تلوين النجوم
-function highlightStars(stars, value) {
-  stars.forEach(s => s.classList.remove("active"));
-  for (let i = 0; i < value; i++) {
-    stars[i].classList.add("active");
-  }
-}
-
-// 📊 حساب المتوسط
-function updateAverage(id) {
-  let allRatings = JSON.parse(localStorage.getItem("ratings-all-" + id)) || [];
-
-  let myRating = localStorage.getItem("rating-" + id);
-
-  if (myRating && !allRatings.includes(Number(myRating))) {
-    allRatings.push(Number(myRating));
-    localStorage.setItem("ratings-all-" + id, JSON.stringify(allRatings));
-  }
-
-  let avg = 0;
-  if (allRatings.length > 0) {
-    let sum = allRatings.reduce((a, b) => a + b, 0);
-    avg = (sum / allRatings.length).toFixed(1);
-  }
-
-  document.getElementById("avg-" + id).textContent =
-    "⭐ متوسط التقييم: " + avg + " / 5 (" + allRatings.length + " تقييم)";
-}
-
-// 💬 التعليقات
-function loadComments(id) {
-  let comments = JSON.parse(localStorage.getItem("comments-" + id)) || [];
-  let box = document.getElementById("comments-" + id);
-  box.innerHTML = "";
-
-  comments.forEach(c => {
-    let div = document.createElement("div");
-    div.className = "comment";
-    div.textContent = c;
-    box.appendChild(div);
-  });
-}
-
-function addComment(id) {
-  let input = document.getElementById("input-" + id);
+// 💬 تعليقات
+window.addComment = async function(id){
+  let input = document.getElementById("input-"+id);
   let text = input.value.trim();
+  if(!text) return;
 
-  if (!text) return;
+  await addDoc(collection(db,"comments"),{
+    matchId:id,
+    text:text
+  });
 
-  let comments = JSON.parse(localStorage.getItem("comments-" + id)) || [];
-  comments.push(text);
-
-  localStorage.setItem("comments-" + id, JSON.stringify(comments));
-
-  input.value = "";
+  input.value="";
   loadComments(id);
+}
+
+async function loadComments(id){
+  let box=document.getElementById("comments-"+id);
+  box.innerHTML="";
+
+  let snap = await getDocs(collection(db,"comments"));
+  snap.forEach(doc=>{
+    let d=doc.data();
+    if(d.matchId==id){
+      let div=document.createElement("div");
+      div.className="comment";
+      div.textContent=d.text;
+      box.appendChild(div);
+    }
+  });
+}
+
+// ⭐ تقييم
+async function loadRatings(id){
+  let snap = await getDocs(collection(db,"ratings"));
+  let arr=[];
+
+  snap.forEach(doc=>{
+    let d=doc.data();
+    if(d.matchId==id){
+      arr.push(d.value);
+    }
+  });
+
+  let avg=0;
+  if(arr.length){
+    avg=(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
+  }
+
+  document.getElementById("avg-"+id).textContent =
+    "⭐ "+avg+" / 5 ("+arr.length+" تقييم)";
 }
 
 </script>
