@@ -19,7 +19,6 @@ header {
   background: #020617;
   font-size: 22px;
   font-weight: bold;
-  border-bottom: 1px solid #1e293b;
 }
 
 .container {
@@ -42,7 +41,6 @@ header {
   font-size: 30px;
   cursor: pointer;
   color: gray;
-  transition: 0.2s;
 }
 
 .stars span.active {
@@ -52,6 +50,11 @@ header {
 .result {
   margin-top: 8px;
   color: #22c55e;
+}
+
+.avg {
+  margin-top: 5px;
+  color: #38bdf8;
 }
 
 textarea {
@@ -89,7 +92,6 @@ button {
 
 <script>
 
-// ⚽ قائمة المباريات
 const matches = [
   { id: 1, name: "برشلونة vs ريال مدريد" },
   { id: 2, name: "بايرن ميونخ vs دورتموند" },
@@ -98,7 +100,7 @@ const matches = [
 
 const container = document.getElementById("matches");
 
-// إنشاء الواجهة
+// إنشاء المباريات
 matches.forEach(match => {
   let div = document.createElement("div");
   div.className = "card";
@@ -115,8 +117,9 @@ matches.forEach(match => {
     </div>
 
     <div class="result" id="result-${match.id}"></div>
+    <div class="avg" id="avg-${match.id}"></div>
 
-    <textarea id="input-${match.id}" placeholder="اكتب رأيك عن المباراة..."></textarea>
+    <textarea id="input-${match.id}" placeholder="اكتب تعليقك..."></textarea>
     <button onclick="addComment(${match.id})">إرسال</button>
 
     <div id="comments-${match.id}"></div>
@@ -126,6 +129,7 @@ matches.forEach(match => {
 
   setupRating(match.id);
   loadComments(match.id);
+  updateAverage(match.id);
 });
 
 // ⭐ التقييم
@@ -136,29 +140,54 @@ function setupRating(id) {
   let saved = localStorage.getItem("rating-" + id);
 
   if (saved) {
-    for (let i = 0; i < saved; i++) {
-      stars[i].classList.add("active");
-    }
+    highlightStars(stars, saved);
     result.textContent = "تقييمك: " + saved + " ⭐";
   }
 
   stars.forEach(star => {
     star.addEventListener("click", () => {
-      let value = star.getAttribute("data-value");
-
-      stars.forEach(s => s.classList.remove("active"));
-
-      for (let i = 0; i < value; i++) {
-        stars[i].classList.add("active");
-      }
+      let value = Number(star.getAttribute("data-value"));
 
       localStorage.setItem("rating-" + id, value);
+
+      highlightStars(stars, value);
       result.textContent = "تقييمك: " + value + " ⭐";
+
+      updateAverage(id);
     });
   });
 }
 
-// 💬 تحميل التعليقات
+// تلوين النجوم
+function highlightStars(stars, value) {
+  stars.forEach(s => s.classList.remove("active"));
+  for (let i = 0; i < value; i++) {
+    stars[i].classList.add("active");
+  }
+}
+
+// 📊 حساب المتوسط
+function updateAverage(id) {
+  let allRatings = JSON.parse(localStorage.getItem("ratings-all-" + id)) || [];
+
+  let myRating = localStorage.getItem("rating-" + id);
+
+  if (myRating && !allRatings.includes(Number(myRating))) {
+    allRatings.push(Number(myRating));
+    localStorage.setItem("ratings-all-" + id, JSON.stringify(allRatings));
+  }
+
+  let avg = 0;
+  if (allRatings.length > 0) {
+    let sum = allRatings.reduce((a, b) => a + b, 0);
+    avg = (sum / allRatings.length).toFixed(1);
+  }
+
+  document.getElementById("avg-" + id).textContent =
+    "⭐ متوسط التقييم: " + avg + " / 5 (" + allRatings.length + " تقييم)";
+}
+
+// 💬 التعليقات
 function loadComments(id) {
   let comments = JSON.parse(localStorage.getItem("comments-" + id)) || [];
   let box = document.getElementById("comments-" + id);
@@ -172,7 +201,6 @@ function loadComments(id) {
   });
 }
 
-// 💬 إضافة تعليق
 function addComment(id) {
   let input = document.getElementById("input-" + id);
   let text = input.value.trim();
